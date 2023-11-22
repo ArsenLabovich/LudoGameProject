@@ -5,7 +5,8 @@
 
     Version 1.0 from 18.11.2023
 
-    Project was written by Arsen Labovich API-6.
+    Project owner is Arsen Labovich API-6 FEI STU.
+
     By Technical Specifications project was implemented in form of Game for 2-4 players.
     Project is written in 1 file, because of Rules that OOP is banned for this project.
 
@@ -55,23 +56,40 @@
 
     22.11.2023
 
-    Version 1.1 update
+    update
 
     Added displaying finished_pieces in the center of the board
     Finished pieces takes '#' cells in the direction of their start
 
-    22.11.2023
-
-    Version 1.2 update
+    update
 
     Added skipping rule.
     If player 2 times in row scores 6, then player skips his turn.
+
+
+    BugFix #1
+
+    Fixed bug with moving piece to finish after one piece has finished
+
+    BugFix #2
+
+    Fixed bug in skipping turn algorithm
+
+    update
+
+    Added statistics in the end of the game
+
+
 
 
     If you find bug during testing my project please contact me on one of mails below:
         arsenstudcz@gmail.com
         xlabovich@stuba.sk
         xlabovich@is.stuba.sk
+
+
+        Второй бросок если выбил 6 но не больше 3 раз подряд
+        Переработать логику если выбросил 6 не два раза а три раза подряд
 """
 
 import random
@@ -220,11 +238,18 @@ def init_game():
     fill_last_score_was_6()
 
     '''
-        Version 1.2 update 
+        update 
         
         This variable keeps booleans for each player, booleans inside array shows if player's last score was 6.
     
     '''
+
+    global statistics
+    statistics = {}
+    global statistic_names
+    statistic_names = ["rolls count", "pieces broke", "pieces escaped", "pieces finished", "6 score on dice "]
+    fill_statistics()
+    print(statistics)
 
     generate_board(board_size)
     print_board(render_board())
@@ -244,7 +269,9 @@ def game():
         print_players_turn()
         print_pieces_left()
         input("Press Enter to roll the dice")
-        score = generate_number()  # change to = int(input()) to test with different scores
+
+        score = int(input())  # change to = int(input()) to test with different scores
+        generate_number()
         print_score(score)
         if check_score(score):
             print_skipping()
@@ -263,8 +290,9 @@ def game():
 
 def end_game():
     winner = find_winner()
-    print(f"player {winner} won the game")
-    input(f"Press Enter to Exit")
+    print(f"player {winner} won the game\n")
+    print_statistics()
+    input(f"Press Enter to Exit\n\n")
     sys.exit(0)
 
     '''
@@ -298,11 +326,14 @@ def check_is_Finished() -> bool:
 
 def check_score(score: int) -> bool:
     if score == 6:
+        statistics[players[player_turn - 1]][statistic_names[4]] += 1
         if last_score_was_6[player_turn - 1]:
             last_score_was_6[player_turn - 1] = False
             return True
         else:
             last_score_was_6[player_turn - 1] = True
+    else:
+        last_score_was_6[player_turn - 1] = False
     return False
 
     '''
@@ -491,6 +522,16 @@ def fill_counts_of_escaped_pieces():
     '''
 
 
+def fill_statistics():
+    global statistics
+
+    for player_index in range(0, players_count):
+        player_key = players[player_index]
+        statistics[player_key] = {}
+        for statistic_name in statistic_names:
+            statistics[player_key][statistic_name] = 0
+
+
 '''                                    '''
 '''        BLOCK OF PRINT FUNCTIONS     '''
 '''                                    '''
@@ -514,6 +555,13 @@ def print_rules():
           f" For example, A player is moving it's piece, and at the end of his move his piece took the same cell with C piece.\n"
           f" In that case C piece will return to it's home( home means that piece become hidden )."
           f"\n\n\n")
+
+
+def print_statistics():
+    for player_key in statistics.keys():
+        print(f"Statistics for {player_key} player:\n\n")
+        for statistics_name in statistics[player_key].keys():
+            print(f"    {statistics_name} - {statistics[player_key][statistics_name]}\n")
 
 
 def print_definitions():
@@ -643,6 +691,7 @@ def render_board() -> [[]]:
 
 
 def generate_number() -> int:
+    statistics[players[player_turn - 1]][statistic_names[0]] += 1
     return random.randint(1, 6)
 
     '''
@@ -665,31 +714,17 @@ def make_turn(possible_turns: {}, number_of_turn: int):
             pieces_cords[players[player_turn - 1]] = copy.deepcopy(cords_of_pieces)
             if new_cords in finish_cords:
                 pieces_to_end_game[player_turn - 1] -= 1
+                statistics[players[player_turn - 1]][statistic_names[3]] += 1
             else:
                 destroy_collision(player_key, new_cords)
+            if new_cords in start_cords:
+                statistics[players[player_turn - 1]][statistic_names[2]] += 1
+            elif new_cords in finish_cords:
+                statistics[players[player_turn - 1]][statistic_names[3]] += 1
             return
 
     '''
         Function detects player chose and apply changes to game.
-    '''
-
-
-def piece_escape():
-    global counts_of_escaped_pieces
-
-    player_index = player_turn - 1
-    cords_to_setup = start_cords[player_index]
-    player_character = players[player_index]
-    for i in range(len(pieces_cords[player_character])):
-        if pieces_cords[player_character][i] == [-1, -1]:
-            pieces_cords[player_character][i] = cords_to_setup
-            counts_of_escaped_pieces[player_turn - 1] += 1
-            return
-
-    '''
-        Function escapes one piece on board.
-        Until  each piece isn't escape, each piece has coordinates [-1, -1] 
-        When piece escapes, in come to start coordinates of it's team.
     '''
 
 
@@ -710,7 +745,8 @@ def generate_possible_turns(
             current_cords = cords
             new_cords = generate_next_cords(score, current_cords)
             if new_cords in pieces_cords[players[player_turn - 1]]:
-                continue
+                if new_cords not in finish_cords:
+                    continue
             possible_turn = [current_cords, new_cords]
             if new_cords == finish_cords[player_turn - 1]:
                 possible_turn_description = (
