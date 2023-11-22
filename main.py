@@ -79,6 +79,11 @@
 
     Added statistics in the end of the game
 
+    update
+
+    Added second chance after scoring 6 first time, and reworked logic of two times 6 in row.
+    So now you can roll dice again after first time scoring 6 , and after 3 times scoring 6 in row you skip your turn
+
 
 
 
@@ -88,8 +93,6 @@
         xlabovich@is.stuba.sk
 
 
-        Второй бросок если выбил 6 но не больше 3 раз подряд
-        Переработать логику если выбросил 6 не два раза а три раза подряд
 """
 
 import random
@@ -268,6 +271,7 @@ def game():
     while not check_is_Finished():
         print_players_turn()
         print_pieces_left()
+        print_board(render_board())
         input("Press Enter to roll the dice")
 
         score = int(input())  # change to = int(input()) to test with different scores
@@ -279,7 +283,9 @@ def game():
             continue
         possible_turns = generate_possible_turns(score)
         print_turns(possible_turns)
-        print_board(render_board())
+        if score == 6:
+            print_second_chance()
+            continue
         next_player_turn()
 
     '''
@@ -327,13 +333,13 @@ def check_is_Finished() -> bool:
 def check_score(score: int) -> bool:
     if score == 6:
         statistics[players[player_turn - 1]][statistic_names[4]] += 1
-        if last_score_was_6[player_turn - 1]:
-            last_score_was_6[player_turn - 1] = False
+        if last_score_was_6[player_turn - 1] == 2:
+            last_score_was_6[player_turn - 1] = 0
             return True
         else:
-            last_score_was_6[player_turn - 1] = True
+            last_score_was_6[player_turn - 1] += 1
     else:
-        last_score_was_6[player_turn - 1] = False
+        last_score_was_6[player_turn - 1] = 0
     return False
 
     '''
@@ -505,7 +511,7 @@ def fill_pieces_to_end_game():
 
 def fill_last_score_was_6():
     for i in range(players_count):
-        last_score_was_6.append(False)
+        last_score_was_6.append(0)
 
     '''
         Filling start variable, at the start nobody has scored 6.
@@ -574,6 +580,10 @@ def print_definitions():
           f"\n\n\n")
 
 
+def print_second_chance():
+    print(f"Player {players[player_turn - 1]} scored 6, so he can roll the dice again and make turn again")
+
+
 def print_pieces_left():
     print(f"Pieces to end game:  {pieces_to_end_game[player_turn - 1]}\n")
 
@@ -607,7 +617,7 @@ def print_turns(possible_turns: {}):
 
 
 def print_skipping():
-    print(f"You scored 6 2 times in row, so you are cheater and you skip turn")
+    print(f"You scored 6 3 times in row, so you are cheater and you skip turn")
     print(f"Player {players[player_turn - 1]} skips his turn ")
 
 
