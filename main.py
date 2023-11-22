@@ -1,7 +1,11 @@
 """
     Introduction.
+
+    Version 1.0 from 18.11.2023
+
     Project was written by Arsen Labovich API-6.
     By Technical Specifications project was implemented in form of Game for 2-4 players.
+    Project is written in 1 file, because of Rules that OOP is banned for this project.
 
     List if implemented logics by Technical Specifications:
 
@@ -42,7 +46,23 @@
             So Finish for each player is 'F' cell on the opposite side of gaming field.
 
 
+    GitHub Link:
 
+        https://github.com/ArsenLabovich/LudoGamePRoject
+
+
+    22.11.2023
+
+    Version 1.1 update
+
+    Added displaying finished_pieces in the center of the board
+    Finished pieces takes '#' cells in the direction of their start
+
+
+    If you find bug during testing my project please contact me on one of mails below:
+        arsenstudcz@gmail.com
+        xlabovich@stuba.sk
+        xlabovich@is.stuba.sk
 """
 
 import random
@@ -536,15 +556,36 @@ def next_player_turn():
 def render_board() -> [[]]:
     rendered_board = copy.deepcopy(board)
 
+    dx_dy_for_rendering_finished_pieces = [[0, 1], [0, -1], [1, 0], [-1, 0]]
+
     for player in pieces_cords.keys():
         for cords in pieces_cords[player]:
             if cords != [-1, -1] and cords not in finish_cords:
                 rendered_board[cords[0]][cords[1]] = str(player)
+
+    for player_key in pieces_cords.keys():
+        dy = dx_dy_for_rendering_finished_pieces[players.index(player_key)][1]
+        dx = dx_dy_for_rendering_finished_pieces[players.index(player_key)][0]
+        start_render_cords = [board_size // 2 + dy, board_size // 2 + dx]
+        for cords in pieces_cords[player_key]:
+            if cords in finish_cords:
+                rendered_board[start_render_cords[0]][start_render_cords[1]] = player_key
+                start_render_cords[0] += dy
+                start_render_cords[1] += dx
+
     return rendered_board
 
     '''
         Function renders board and fill board with pieces.
         After each turn border re-renders and pieces moves to another coordinates.
+        
+        Version 1.1 update:
+        
+        Function update:
+        Now after finishing  pieces are displaying in the center of the board instead of
+        '#' cell, instead of hiding after finishing.
+        
+        
     '''
 
 
