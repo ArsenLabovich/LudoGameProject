@@ -1,4 +1,6 @@
 """
+    Start date 15.11.2023
+
     Introduction.
 
     Version 1.0 from 18.11.2023
@@ -57,6 +59,13 @@
 
     Added displaying finished_pieces in the center of the board
     Finished pieces takes '#' cells in the direction of their start
+
+    22.11.2023
+
+    Version 1.2 update
+
+    Added skipping rule.
+    If player 2 times in row scores 6, then player skips his turn.
 
 
     If you find bug during testing my project please contact me on one of mails below:
@@ -206,6 +215,17 @@ def init_game():
         It means that pieces are in 'their house' . 
     '''
 
+    global last_score_was_6
+    last_score_was_6 = []
+    fill_last_score_was_6()
+
+    '''
+        Version 1.2 update 
+        
+        This variable keeps booleans for each player, booleans inside array shows if player's last score was 6.
+    
+    '''
+
     generate_board(board_size)
     print_board(render_board())
     print_definitions()
@@ -226,6 +246,10 @@ def game():
         input("Press Enter to roll the dice")
         score = generate_number()  # change to = int(input()) to test with different scores
         print_score(score)
+        if check_score(score):
+            print_skipping()
+            next_player_turn()
+            continue
         possible_turns = generate_possible_turns(score)
         print_turns(possible_turns)
         print_board(render_board())
@@ -269,6 +293,23 @@ def check_is_Finished() -> bool:
 
     '''
         Game continue till it's not finished functions checks if one of players has no pieces_to_end_game.
+    '''
+
+
+def check_score(score: int) -> bool:
+    if score == 6:
+        if last_score_was_6[player_turn - 1]:
+            last_score_was_6[player_turn - 1] = False
+            return True
+        else:
+            last_score_was_6[player_turn - 1] = True
+    return False
+
+    '''
+        Version 1.2 update
+        
+        This function checks and controls if player score 6 two times in row.
+        In such case it skips turn for player.
     '''
 
 
@@ -431,6 +472,15 @@ def fill_pieces_to_end_game():
     '''
 
 
+def fill_last_score_was_6():
+    for i in range(players_count):
+        last_score_was_6.append(False)
+
+    '''
+        Filling start variable, at the start nobody has scored 6.
+    '''
+
+
 def fill_counts_of_escaped_pieces():
     for _ in range(players_count):
         counts_of_escaped_pieces.append(0)
@@ -506,6 +556,11 @@ def print_turns(possible_turns: {}):
             print(f"{key}")
         selected_turn = int(input())
         make_turn(possible_turns, selected_turn)
+
+
+def print_skipping():
+    print(f"You scored 6 2 times in row, so you are cheater and you skip turn")
+    print(f"Player {players[player_turn - 1]} skips his turn ")
 
 
 def print_board(rendered_board: []):
@@ -584,8 +639,6 @@ def render_board() -> [[]]:
         Function update:
         Now after finishing  pieces are displaying in the center of the board instead of
         '#' cell, instead of hiding after finishing.
-        
-        
     '''
 
 
